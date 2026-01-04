@@ -290,12 +290,21 @@ def dashboard_admin_view(request):
     # 4. Jenis Konseling Statistics untuk chart
     jenis_stats = Booking.objects.values('jenis').annotate(count=Count('jenis')).order_by('-count')
     
+    # 4b. Jenis Laporan Statistics untuk pie chart
+    jenis_laporan_stats = Laporan.objects.values('jenis').annotate(count=Count('jenis')).order_by('-count')
+    
     # 5. Monthly Booking Trends (last 12 months)
     from datetime import date
     from django.db.models.functions import TruncMonth
     
-    # Get 12 months ago
-    twelve_months_ago = today - timedelta(days=365)
+    # Get 12 months ago (more accurate: use relative_delta or datetime arithmetic)
+    # Calculate first day of current month
+    first_day_this_month = today.replace(day=1)
+    # Go back 12 months from first day of this month
+    twelve_months_ago = first_day_this_month - timedelta(days=1)
+    twelve_months_ago = twelve_months_ago.replace(day=1)
+    
+    logger.debug(f"Today: {today}, Twelve months ago: {twelve_months_ago}")
     
     # Query bookings grouped by month and jenis
     monthly_bookings = Booking.objects.filter(
@@ -322,12 +331,26 @@ def dashboard_admin_view(request):
     months_labels = []
     months_data = {}
     
+    # Generate 12 months from current month going backwards
     for i in range(11, -1, -1):
-        month_date = today - timedelta(days=30*i)
-        month_key = month_date.replace(day=1)
+        # Calculate month by going back i months
+        year = first_day_this_month.year
+        month = first_day_this_month.month
+        
+        # Subtract i months
+        month = month - i
+        while month <= 0:
+            month += 12
+            year -= 1
+        
+        # Create timezone-aware datetime
+        month_date = timezone.make_aware(datetime(year, month, 1))
         month_label = month_date.strftime('%b')
         months_labels.append(month_label)
-        months_data[month_key] = {}
+        months_data[month_date] = {}
+    
+    logger.debug(f"Month labels: {months_labels}")
+    logger.debug(f"Month keys: {list(months_data.keys())}")
     
     # Fill data from query
     for booking in monthly_bookings:
@@ -363,7 +386,88 @@ def dashboard_admin_view(request):
                 'backgroundColor': color_map.get(jenis, '#9ca3af')
             })
     
-    # 6. Recent Activities (last 10 activities from bookings and reports)
+    # 6. Monthly Laporan Trends (last 12 months) - CHART BARU
+    # Get all laporans in last 12 months
+    all_laporans_12m = Laporan.objects.filter(
+        created_at__gte=twelve_months_ago
+    ).values('created_at', 'jenis')
+    
+    logger.debug(f"Total laporans in 12 months: {all_laporans_12m.count()}")
+    print(f"[DEBUG] Total laporans: {all_laporans_12m.count()}")
+    
+    # Manually group by month
+    laporan_months_data = {month_key: {} for month_key in months_data.keys()}
+    
+    print(f"[DEBUG] Expected month keys: {list(laporan_months_data.keys())}")
+    
+    for laporan_obj in all_laporans_12m:
+        created_dt = laporan_obj['created_at']
+        if created_dt:
+            # Create month_key - preserve timezone!
+            month_key = created_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            jenis = laporan_obj['jenis']
+            
+            print(f"[DEBUG] Processing: created_dt={created_dt}, month_key={month_key}, jenis={jenis}, in_dict={month_key in laporan_months_data}")
+            
+            if month_key in laporan_months_data:
+                if jenis not in laporan_months_data[month_key]:
+                    laporan_months_data[month_key][jenis] = 0
+                laporan_months_data[month_key][jenis] += 1
+            else:
+                # Try to find matching key by date only (ignore time/timezone differences)
+                matched = False
+                for key in laporan_months_data.keys():
+                    if key.year == month_key.year and key.month == month_key.month:
+                        if jenis not in laporan_months_data[key]:
+                            laporan_months_data[key][jenis] = 0
+                        laporan_months_data[key][jenis] += 1
+                        matched = True
+                        print(f"[DEBUG] Matched with key: {key}")
+                        break
+                if not matched:
+                    print(f"[DEBUG] No match found for month_key: {month_key}")
+    
+    logger.debug(f"Laporan months_data after fill: {laporan_months_data}")
+    print(f"[DEBUG] Laporan months_data: {laporan_months_data}")
+    
+    # Get unique jenis laporan for datasets
+    all_jenis_laporan = list(Laporan.objects.values_list('jenis', flat=True).distinct())
+    
+    # Build datasets for each jenis laporan
+    laporan_datasets = []
+    laporan_color_map = {
+        'Kekerasan Fisik': '#ef4444',
+        'Kekerasan Psikis': '#f59e0b',
+        'Kekerasan Seksual': '#dc2626',
+        'Diskriminasi': '#8b5cf6',
+        'Perundungan (Bullying)': '#ec4899',
+        'Pelecehan': '#f43f5e',
+        'Lainnya': '#6b7280'
+    }
+    
+    # Debug log
+    logger.debug(f"All jenis laporan: {all_jenis_laporan}")
+    logger.debug(f"Laporan months data keys: {list(laporan_months_data.keys())}")
+    print(f"[DEBUG] All jenis laporan: {all_jenis_laporan}")
+    
+    for jenis in all_jenis_laporan:
+        if jenis:
+            data_points = []
+            for month_key in sorted(laporan_months_data.keys()):
+                value = laporan_months_data[month_key].get(jenis, 0)
+                data_points.append(value)
+            
+            logger.debug(f"Dataset for {jenis}: {data_points}")
+            
+            laporan_datasets.append({
+                'label': jenis,
+                'data': data_points,
+                'backgroundColor': laporan_color_map.get(jenis, '#9ca3af')
+            })
+    
+    logger.debug(f"Total laporan_datasets: {len(laporan_datasets)}")
+    
+    # 7. Recent Activities (last 10 activities from bookings and reports)
     recent_bookings = Booking.objects.select_related('user').order_by('-created_at')[:5]
     recent_reports = Laporan.objects.select_related('pelapor').order_by('-created_at')[:5]
     
@@ -401,8 +505,10 @@ def dashboard_admin_view(request):
         'total_reports': total_reports,
         'total_content': total_content,
         'jenis_stats': jenis_stats,
+        'jenis_laporan_stats': jenis_laporan_stats,  # PIE CHART LAPORAN
         'months_labels': months_labels,
         'monthly_datasets': monthly_datasets,
+        'laporan_datasets': laporan_datasets,  # BAR CHART LAPORAN
         'activities': activities,
     })
 

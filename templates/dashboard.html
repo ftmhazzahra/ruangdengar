@@ -229,6 +229,17 @@ Dengar{% endblock %} {% block content %}
     </div>
   </section>
 
+  <section class="chart-container">
+    <div class="chart-card">
+      <h3>Klasifikasi Jenis Laporan</h3>
+      <canvas id="laporanDonutChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Tren Laporan Bulanan (12 Bulan Terakhir)</h3>
+      <canvas id="laporanBarChart"></canvas>
+    </div>
+  </section>
+
   <section class="activity-table">
     <h3>Aktivitas Terbaru</h3>
     <table>
@@ -321,14 +332,22 @@ Dengar{% endblock %} {% block content %}
       label: "{{ dataset.label }}",
       data: {{ dataset.data|safe }},
       backgroundColor: "{{ dataset.backgroundColor }}",
-      borderRadius: 4,
+      borderColor: "{{ dataset.backgroundColor }}",
+      borderWidth: 2,
+      tension: 0.4,
+      pointRadius: 5,
+      pointBackgroundColor: "{{ dataset.backgroundColor }}",
+      pointBorderColor: "#fff",
+      pointBorderWidth: 2,
+      pointHoverRadius: 7,
+      fill: false,
     },
     {% endfor %}
   ];
 
   const ctxBar = document.getElementById("barChart").getContext("2d");
   new Chart(ctxBar, {
-    type: "bar",
+    type: "line",
     data: {
       labels: monthlyLabels,
       datasets: monthlyDatasets,
@@ -339,9 +358,8 @@ Dengar{% endblock %} {% block content %}
         legend: { position: "bottom", labels: { boxWidth: 14, padding: 15 } },
       },
       scales: {
-        x: { stacked: true, grid: { display: false } },
+        x: { grid: { display: false } },
         y: { 
-          stacked: true,
           beginAtZero: true,
           ticks: {
             stepSize: 1,
@@ -351,5 +369,100 @@ Dengar{% endblock %} {% block content %}
       },
     },
   });
+
+  // ===== LAPORAN CHARTS =====
+  // Pie Chart - Klasifikasi Jenis Laporan
+  const jenisLaporanData = [
+    {% for item in jenis_laporan_stats %}
+    { jenis: "{{ item.jenis }}", count: {{ item.count }} },
+    {% endfor %}
+  ];
+  
+  const laporanLabels = jenisLaporanData.map(item => item.jenis || 'Lainnya');
+  const laporanData = jenisLaporanData.map(item => item.count);
+  const laporanColors = ["#ef4444", "#f59e0b", "#dc2626", "#8b5cf6", "#ec4899", "#f43f5e", "#6b7280"];
+
+  const ctxLaporanDonut = document.getElementById("laporanDonutChart").getContext("2d");
+  new Chart(ctxLaporanDonut, {
+    type: "doughnut",
+    data: {
+      labels: laporanLabels,
+      datasets: [
+        {
+          data: laporanData,
+          backgroundColor: laporanColors.slice(0, laporanLabels.length),
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom", labels: { boxWidth: 14, padding: 15 } },
+      },
+    },
+  });
+
+  // Bar Chart - Laporan Trends
+  const laporanMonthlyLabels = [
+    {% for label in months_labels %}
+    "{{ label }}",
+    {% endfor %}
+  ];
+  
+  const laporanDatasets = [
+    {% for dataset in laporan_datasets %}
+    {
+      label: "{{ dataset.label }}",
+      data: {{ dataset.data|safe }},
+      backgroundColor: "{{ dataset.backgroundColor }}",
+      borderColor: "{{ dataset.backgroundColor }}",
+      borderWidth: 2,
+      tension: 0.4,
+      pointRadius: 5,
+      pointBackgroundColor: "{{ dataset.backgroundColor }}",
+      pointBorderColor: "#fff",
+      pointBorderWidth: 2,
+      pointHoverRadius: 7,
+      fill: false,
+    },
+    {% endfor %}
+  ];
+
+  console.log('Laporan Monthly Labels:', laporanMonthlyLabels);
+  console.log('Laporan Datasets:', laporanDatasets);
+  console.log('Laporan Datasets length:', laporanDatasets.length);
+
+  // Check if there's any data
+  const hasLaporanData = laporanDatasets.length > 0 && laporanDatasets.some(d => d.data.some(v => v > 0));
+  
+  if (laporanDatasets.length > 0) {
+    const ctxLaporanBar = document.getElementById("laporanBarChart").getContext("2d");
+    new Chart(ctxLaporanBar, {
+      type: "line",
+      data: {
+        labels: laporanMonthlyLabels,
+        datasets: laporanDatasets,
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "bottom", labels: { boxWidth: 14, padding: 15 } },
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { 
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1,
+              precision: 0
+            }
+          },
+        },
+      },
+    });
+  } else {
+    console.log('No laporan data available for line chart');
+  }
 </script>
 {% endblock %}

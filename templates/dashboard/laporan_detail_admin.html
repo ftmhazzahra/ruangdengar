@@ -50,18 +50,70 @@
       {% endif %}
     </div>
   </div>
-  <div class="info-item">
-    <div class="info-label">Terlapor</div>
-    <div class="info-value">
-      {% if laporan.nama_terlapor %}
-        <div><strong>{{ laporan.nama_terlapor }}</strong></div>
-        {% if laporan.nim_nip_terlapor %}<div style="font-size:12px;color:#6b7280;">{{ laporan.nim_nip_terlapor }}</div>{% endif %}
-        {% if laporan.asal_instansi_terlapor %}<div style="font-size:12px;color:#6b7280;">{{ laporan.asal_instansi_terlapor }}</div>{% endif %}
-        {% if laporan.ciri_ciri_pelaku %}
-          <div style="margin-top:6px; font-size:13px; color:#374151;">Ciri-ciri: {{ laporan.ciri_ciri_pelaku }}</div>
-        {% endif %}
-      {% else %}-{% endif %}
-    </div>
+  <h3 class="section-title" style="margin-top:24px;">Data Terlapor (Pelaku)</h3>
+  <div style="background:#f9fafb;padding:16px;border-radius:8px;border-left:4px solid #ef4444;">
+    {% if laporan.nama_terlapor %}
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;margin-bottom:10px;">
+        <div style="font-weight:600;color:#6b7280;">Nama Terlapor:</div>
+        <div style="color:#111827;font-weight:600;">
+          {{ laporan.nama_terlapor }}
+          {% if laporan.jumlah_terlapor %}
+            <span style="font-size:12px;color:#6b7280;font-weight:400;"> ({{ laporan.jumlah_terlapor }} orang)</span>
+          {% endif %}
+        </div>
+      </div>
+      
+      {% if laporan.nim_nip_terlapor %}
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;margin-bottom:10px;">
+        <div style="font-weight:600;color:#6b7280;">NIM/NIP:</div>
+        <div style="color:#374151;">{{ laporan.nim_nip_terlapor }}</div>
+      </div>
+      {% endif %}
+      
+      {% if laporan.asal_instansi_terlapor %}
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;margin-bottom:10px;">
+        <div style="font-weight:600;color:#6b7280;">Instansi:</div>
+        <div style="color:#374151;">{{ laporan.asal_instansi_terlapor }}</div>
+      </div>
+      {% endif %}
+      
+      {% if laporan.fakultas_terlapor %}
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;margin-bottom:10px;">
+        <div style="font-weight:600;color:#6b7280;">Fakultas:</div>
+        <div style="color:#374151;">{{ laporan.fakultas_terlapor }}</div>
+      </div>
+      {% endif %}
+      
+      {% if laporan.prodi_terlapor %}
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;margin-bottom:10px;">
+        <div style="font-weight:600;color:#6b7280;">Program Studi:</div>
+        <div style="color:#374151;">{{ laporan.prodi_terlapor }}</div>
+      </div>
+      {% endif %}
+      
+      {% if laporan.no_wa_terlapor %}
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;margin-bottom:10px;">
+        <div style="font-weight:600;color:#6b7280;">No. WhatsApp:</div>
+        <div style="color:#374151;">{{ laporan.no_wa_terlapor }}</div>
+      </div>
+      {% endif %}
+      
+      {% if laporan.hubungan_terlapor_korban %}
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;margin-bottom:10px;">
+        <div style="font-weight:600;color:#6b7280;">Hubungan dgn Korban:</div>
+        <div style="color:#374151;">{{ laporan.hubungan_terlapor_korban }}</div>
+      </div>
+      {% endif %}
+      
+      {% if laporan.ciri_ciri_pelaku %}
+      <div style="margin-top:12px;padding:12px;background:#fff;border-radius:6px;border:1px solid #e5e7eb;">
+        <div style="font-weight:600;color:#374151;margin-bottom:6px;font-size:13px;">🔍 Ciri-ciri Fisik:</div>
+        <div style="font-size:13px;color:#6b7280;line-height:1.6;white-space:pre-wrap;">{{ laporan.ciri_ciri_pelaku }}</div>
+      </div>
+      {% endif %}
+    {% else %}
+      <div style="color:#9ca3af;text-align:center;padding:20px;">Data terlapor tidak tersedia</div>
+    {% endif %}
   </div>
 
   <!-- AI Analysis Section -->

@@ -126,11 +126,12 @@
         border-radius: 24px;
         padding: 50px 40px;
         margin-bottom: 50px;
-        overflow: hidden;
         box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
         display: flex;
         align-items: center;
         gap: 40px;
+        overflow-x: auto;
+        overflow-y: visible;
     }
 
     .hero-layer {
@@ -176,6 +177,8 @@
         position: relative;
         z-index: 1;
         flex: 1;
+        min-width: 0;
+        max-width: 100%;
     }
 
     .hero-title {
@@ -195,6 +198,9 @@
         color: white;
         text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
         max-width: 100%;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
     }
 
     .hero-pills {
@@ -214,6 +220,9 @@
         font-size: 14px;
         font-weight: 700;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        display: inline-block;
     }
 
     .hero-quote {
@@ -224,6 +233,8 @@
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.3);
         max-width: 850px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 
     .hero-illustration {
@@ -244,31 +255,26 @@
         border: 4px solid rgba(255, 255, 255, 0.2);
     }
 
-    .hero-logo {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        background: rgba(255, 255, 255, 0.95);
-        padding: 12px 18px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
     @media (max-width: 1024px) {
         .hero-dashboard {
             flex-direction: column;
-            align-items: flex-start;
             padding: 32px 24px;
             gap: 24px;
         }
 
-        .hero-illustration img {
+        .hero-content {
+            text-align: center;
             width: 100%;
-            max-width: 360px;
-            height: auto;
+        }
+
+        .hero-illustration {
+            width: 100%;
+            order: -1;
+        }
+
+        .hero-illustration img {
+            max-width: 400px;
+            margin: 0 auto;
         }
 
         .hero-quote {
@@ -277,56 +283,95 @@
 
         .hero-pills {
             gap: 10px;
+            justify-content: center;
         }
     }
 
     @media (max-width: 640px) {
         .container-7xl {
             padding: 0 12px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .hero-dashboard {
-            padding: 24px 16px;
-            gap: 16px;
+            padding: 28px 20px;
+            gap: 20px;
             margin-bottom: 32px;
+            flex-direction: column;
+            align-items: stretch;
+            overflow: visible;
+        }
+
+        .hero-content {
+            text-align: center;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            flex: none;
         }
 
         .hero-title {
-            font-size: clamp(22px, 5.5vw, 32px);
-            margin-bottom: 12px;
+            font-size: 20px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
         }
 
         .hero-text {
-            font-size: clamp(13px, 2.3vw, 15px);
-            margin-bottom: 20px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
         }
 
         .hero-pills {
             gap: 8px;
-            margin-bottom: 18px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .hero-pill {
-            padding: 8px 14px;
+            padding: 8px 12px;
             font-size: 12px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+
+        .hero-illustration {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            order: -1;
         }
 
         .hero-illustration img {
-            max-width: 100%;
-            width: 260px;
+            max-width: 280px;
+            width: 100%;
             height: auto;
         }
 
         .hero-quote {
-            padding: 16px 18px;
+            padding: 14px 16px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
         }
 
         .hero-quote p:first-child {
             font-size: 14px;
+            line-height: 1.4;
         }
 
         .hero-quote p:last-child {
             font-size: 12px;
+            line-height: 1.5;
         }
 
         .artikel-grid {
@@ -336,8 +381,184 @@
         }
 
         .rekomendasi-grid {
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: 1fr;
             gap: 16px;
+        }
+
+        .container-7xl h1 {
+            font-size: 26px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .container-7xl > p {
+            font-size: 15px !important;
+            margin-bottom: 20px !important;
+        }
+    }
+    
+    @media (max-width: 375px) {
+        .container-7xl {
+            padding: 0 10px;
+            width: 100%;
+        }
+
+        .hero-dashboard {
+            padding: 20px 12px;
+        }
+
+        .hero-content {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .hero-title {
+            font-size: 20px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .hero-text {
+            font-size: 13px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .hero-pill {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+
+        .hero-illustration img {
+            max-width: 240px;
+        }
+
+        .container-7xl h1 {
+            font-size: 22px !important;
+        }
+
+        .container-7xl > p {
+            font-size: 14px !important;
+        }
+    }
+        }
+    }
+
+    @media (max-width: 640px) {
+        .container-7xl {
+            padding: 0 8px !important;
+        }
+
+        .hero-dashboard {
+            padding: 20px 12px !important;
+            gap: 12px !important;
+            margin-bottom: 24px !important;
+        }
+
+        .hero-title {
+            font-size: clamp(18px, 4.5vw, 24px) !important;
+            margin-bottom: 10px !important;
+            line-height: 1.3 !important;
+            word-wrap: break-word !important;
+        }
+
+        .hero-text {
+            font-size: clamp(12px, 2vw, 14px) !important;
+            margin-bottom: 16px !important;
+            line-height: 1.5 !important;
+            word-wrap: break-word !important;
+        }
+
+        .hero-pills {
+            gap: 6px !important;
+            margin-bottom: 14px !important;
+            flex-wrap: wrap !important;
+        }
+
+        .hero-pill {
+            padding: 6px 10px !important;
+            font-size: 11px !important;
+            white-space: nowrap !important;
+        }
+
+        .hero-illustration {
+            display: none !important;
+        }
+
+        .hero-logo {
+            display: none !important;
+        }
+
+        .hero-illustration img {
+            max-width: 100% !important;
+            width: 200px !important;
+            height: auto !important;
+        }
+
+        .hero-quote {
+            padding: 12px 14px !important;
+        }
+
+        .hero-quote p:first-child {
+            font-size: 13px !important;
+            line-height: 1.4 !important;
+        }
+
+        .hero-quote p:last-child {
+            font-size: 11px !important;
+            line-height: 1.4 !important;
+        }
+
+        .artikel-grid {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+            margin-top: 16px !important;
+        }
+
+        .rekomendasi-grid {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+        }
+
+        /* Info cards mobile optimization */
+        .container-7xl > div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+            margin-bottom: 30px !important;
+        }
+
+        /* Card text mobile optimization */
+        .container-7xl h1 {
+            font-size: 24px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .container-7xl > p {
+            font-size: 14px !important;
+            margin-bottom: 20px !important;
+        }
+    }
+    
+    /* Extra small screens (375px and below) */
+    @media (max-width: 375px) {
+        .container-7xl {
+            padding: 0 6px !important;
+        }
+
+        .hero-title {
+            font-size: 16px !important;
+        }
+
+        .hero-text {
+            font-size: 11px !important;
+        }
+
+        .hero-pill {
+            padding: 5px 8px !important;
+            font-size: 10px !important;
+        }
+
+        .hero-illustration img {
+            width: 160px !important;
         }
     }
 </style>
@@ -381,16 +602,10 @@
             </div>
         </div>
 
-        <!-- Illustration with Logo Overlay -->
+        <!-- Illustration -->
         <div class="hero-illustration">
             <img src="https://images.unsplash.com/photo-1573497620053-ea5300f94f21?w=500&q=80" 
                 alt="Support illustration">
-            
-            <!-- Logo Watermark -->
-            <div class="hero-logo">
-                <img src="{% static 'images/logo.png' %}" alt="Ruang Dengar Logo" style="width: 32px; height: 32px;">
-                <span style="font-size: 16px; font-weight: 700; color: #3a307b;">Ruang Dengar</span>
-            </div>
         </div>
     </div>
 
@@ -412,8 +627,8 @@
             <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
             <div style="position: relative; z-index: 1;">
                 <div style="font-size: 36px; margin-bottom: 15px;">💜</div>
-                <h3 style="font-size: 20px; font-weight: 700; margin: 0 0 12px 0; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">Apa itu Ruang Dengar?</h3>
-                <p style="font-size: 14px; line-height: 1.7; margin: 0; font-weight: 500; text-shadow: 0 1px 5px rgba(0,0,0,0.2);">
+                <h3 style="font-size: 20px; font-weight: 700; margin: 0 0 12px 0; text-shadow: 0 2px 8px rgba(0,0,0,0.3); word-wrap: break-word;">Apa itu Ruang Dengar?</h3>
+                <p style="font-size: 14px; line-height: 1.7; margin: 0; font-weight: 500; text-shadow: 0 1px 5px rgba(0,0,0,0.2); word-wrap: break-word; overflow-wrap: break-word;">
                     Tempat yang kami siapkan untuk kamu ketika butuh didengarkan. Ceritakan pengalamanmu tentang perundungan, kekerasan seksual, atau perilaku yang mengganggu rasa amanmu.
                 </p>
             </div>
@@ -424,8 +639,8 @@
             <div style="position: absolute; bottom: -20px; left: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
             <div style="position: relative; z-index: 1;">
                 <div style="font-size: 36px; margin-bottom: 15px;">💬</div>
-                <h3 style="font-size: 20px; font-weight: 700; margin: 0 0 12px 0; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">Kenapa Ruang Dengar Ada?</h3>
-                <p style="font-size: 14px; line-height: 1.7; margin: 0; font-weight: 500; text-shadow: 0 1px 5px rgba(0,0,0,0.2);">
+                <h3 style="font-size: 20px; font-weight: 700; margin: 0 0 12px 0; text-shadow: 0 2px 8px rgba(0,0,0,0.3); word-wrap: break-word;">Kenapa Ruang Dengar Ada?</h3>
+                <p style="font-size: 14px; line-height: 1.7; margin: 0; font-weight: 500; text-shadow: 0 1px 5px rgba(0,0,0,0.2); word-wrap: break-word; overflow-wrap: break-word;">
                     Kami percaya setiap mahasiswa berhak merasakan kampus yang aman. Ada hal yang sulit diceritakan langsung—di sinilah Ruang Dengar menjadi jembatannya.
                 </p>
             </div>
@@ -436,16 +651,16 @@
             <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
             <div style="position: relative; z-index: 1;">
                 <div style="font-size: 36px; margin-bottom: 15px;">🌱</div>
-                <h3 style="font-size: 20px; font-weight: 700; margin: 0 0 12px 0; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">Yang Bisa Kamu Lakukan</h3>
-                <p style="font-size: 14px; line-height: 1.7; margin: 0; font-weight: 500; text-shadow: 0 1px 5px rgba(0,0,0,0.2);">
+                <h3 style="font-size: 20px; font-weight: 700; margin: 0 0 12px 0; text-shadow: 0 2px 8px rgba(0,0,0,0.3); word-wrap: break-word;">Yang Bisa Kamu Lakukan</h3>
+                <p style="font-size: 14px; line-height: 1.7; margin: 0; font-weight: 500; text-shadow: 0 1px 5px rgba(0,0,0,0.2); word-wrap: break-word; overflow-wrap: break-word;">
                     Membuat laporan (anonim/identitas asli), melihat perkembangan, membaca artikel edukatif, dan terhubung dengan tim PPKPT bila membutuhkan bantuan langsung.
                 </p>
             </div>
         </div>
     </div>
 
-    <h1 style="font-size: 32px; font-weight:800; color:#333; margin-bottom: 10px;">Edukasi & Informasi</h1>
-    <p style="color:#666; margin-bottom: 30px; font-size: 16px; max-width:700px;">
+    <h1 style="font-size: 32px; font-weight:800; color:#333; margin-bottom: 10px; word-wrap: break-word;">Edukasi & Informasi</h1>
+    <p style="color:#666; margin-bottom: 30px; font-size: 16px; max-width:700px; word-wrap: break-word; overflow-wrap: break-word;">
         Temukan artikel, panduan, dan materi edukasi terbaik untuk mendukung perkembangan dan keamananmu di kampus.
     </p>
 
