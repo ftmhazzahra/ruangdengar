@@ -118,82 +118,260 @@
         font-weight: 700;
         color: #333;
     }
+
+    /* Hero */
+    .hero-dashboard {
+        position: relative;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px;
+        padding: 50px 40px;
+        margin-bottom: 50px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 40px;
+    }
+
+    .hero-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .hero-layer.dark {
+        background: rgba(0, 0, 0, 0.25);
+    }
+
+    .hero-layer.pattern {
+        background-image:
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+
+    .hero-circle {
+        position: absolute;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+    }
+
+    .hero-circle.one {
+        top: 20px;
+        right: 20px;
+        width: 80px;
+        height: 80px;
+        animation: rotate 20s linear infinite;
+    }
+
+    .hero-circle.two {
+        bottom: 30px;
+        left: 40px;
+        width: 50px;
+        height: 50px;
+        animation: rotate 15s linear infinite reverse;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+    }
+
+    .hero-title {
+        font-size: clamp(28px, 5vw, 40px);
+        font-weight: 800;
+        margin: 0 0 20px 0;
+        line-height: 1.3;
+        color: white;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-text {
+        font-size: clamp(15px, 2.7vw, 17px);
+        line-height: 1.8;
+        margin-bottom: 30px;
+        font-weight: 500;
+        color: white;
+        text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+        max-width: 100%;
+    }
+
+    .hero-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    .hero-pill {
+        background: rgba(255, 255, 255, 0.25);
+        padding: 10px 20px;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: white;
+        font-size: 14px;
+        font-weight: 700;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero-quote {
+        background: rgba(255, 255, 255, 0.2);
+        border-left: 4px solid white;
+        padding: 20px 25px;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        max-width: 850px;
+    }
+
+    .hero-illustration {
+        position: relative;
+        z-index: 1;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    .hero-illustration img {
+        width: 100%;
+        max-width: 380px;
+        height: auto;
+        object-fit: cover;
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        border: 4px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-logo {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 12px 18px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    @media (max-width: 1024px) {
+        .hero-dashboard {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 32px 24px;
+            gap: 24px;
+        }
+
+        .hero-illustration img {
+            width: 100%;
+            max-width: 360px;
+            height: auto;
+        }
+
+        .hero-quote {
+            max-width: 100%;
+        }
+
+        .hero-pills {
+            gap: 10px;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .container-7xl {
+            padding: 0 12px;
+        }
+
+        .hero-dashboard {
+            padding: 24px 16px;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .hero-title {
+            font-size: clamp(22px, 5.5vw, 32px);
+            margin-bottom: 12px;
+        }
+
+        .hero-text {
+            font-size: clamp(13px, 2.3vw, 15px);
+            margin-bottom: 20px;
+        }
+
+        .hero-pills {
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .hero-pill {
+            padding: 8px 14px;
+            font-size: 12px;
+        }
+
+        .hero-illustration img {
+            max-width: 100%;
+            width: 260px;
+            height: auto;
+        }
+
+        .hero-quote {
+            padding: 16px 18px;
+        }
+
+        .hero-quote p:first-child {
+            font-size: 14px;
+        }
+
+        .hero-quote p:last-child {
+            font-size: 12px;
+        }
+
+        .artikel-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .rekomendasi-grid {
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+    }
 </style>
 
 
 <div class="container-7xl">
 
     <!-- Hero Section dengan Design Futuristik -->
-    <div style="
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 24px;
-        padding: 50px 40px;
-        margin-bottom: 50px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
-        display: flex;
-        align-items: center;
-        gap: 40px;
-    ">
-        <!-- Dark Overlay untuk kontras teks -->
-        <div style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.25);
-        "></div>
-        
-        <!-- Animated Background Pattern -->
-        <div style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 50%, rgba(255,255,255,0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.08) 0%, transparent 50%);
-            animation: pulse 4s ease-in-out infinite;
-        "></div>
-        
-        <!-- Decorative Elements -->
-        <div style="position: absolute; top: 20px; right: 20px; width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.15); border-radius: 50%; animation: rotate 20s linear infinite;"></div>
-        <div style="position: absolute; bottom: 30px; left: 40px; width: 50px; height: 50px; border: 2px solid rgba(255,255,255,0.15); border-radius: 50%; animation: rotate 15s linear infinite reverse;"></div>
-        
-        <!-- Content Wrapper -->
-        <div style="position: relative; z-index: 1; flex: 1;">
+    <div class="hero-dashboard">
+        <div class="hero-layer dark"></div>
+        <div class="hero-layer pattern"></div>
+        <div class="hero-circle one"></div>
+        <div class="hero-circle two"></div>
+
+        <div class="hero-content">
             <div style="display: inline-block; background: rgba(255,255,255,0.25); padding: 8px 20px; border-radius: 20px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
                 <span style="color: white; font-size: 14px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">💜 Selamat Datang di Ruang Dengar</span>
             </div>
             
-            <h1 style="color: white; font-size: 40px; font-weight: 800; margin: 0 0 20px 0; line-height: 1.3; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-                Kami di Sini untuk Mendengarkanmu
-            </h1>
+            <h1 class="hero-title">Kami di Sini untuk Mendengarkanmu</h1>
             
-            <p style="color: white; font-size: 17px; line-height: 1.8; margin-bottom: 30px; font-weight: 500; text-shadow: 0 1px 5px rgba(0,0,0,0.3); max-width: 850px;">
+            <p class="hero-text">
                 Ruang Dengar adalah tempat yang kami siapkan untuk kamu—mahasiswa Telkom University Purwokerto—ketika kamu butuh didengarkan. Di sini, kamu bisa menceritakan pengalaman yang membuatmu merasa tidak aman, tertekan, atau tidak nyaman di lingkungan kampus.
             </p>
 
             <!-- Feature Pills -->
-            <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 30px;">
-                <div style="background: rgba(255,255,255,0.25); padding: 10px 20px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.4);">
-                    <span style="color: white; font-size: 14px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">✨ Melapor Secara Aman</span>
-                </div>
-                <div style="background: rgba(255,255,255,0.25); padding: 10px 20px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.4);">
-                    <span style="color: white; font-size: 14px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">✨ Konsultasi Tanpa Tekanan</span>
-                </div>
-                <div style="background: rgba(255,255,255,0.25); padding: 10px 20px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.4);">
-                    <span style="color: white; font-size: 14px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">✨ Pendampingan Profesional</span>
-                </div>
-                <div style="background: rgba(255,255,255,0.25); padding: 10px 20px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.4);">
-                    <span style="color: white; font-size: 14px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">✨ Pantau Tindak Lanjut</span>
-                </div>
+            <div class="hero-pills">
+                <div class="hero-pill">✨ Melapor Secara Aman</div>
+                <div class="hero-pill">✨ Konsultasi Tanpa Tekanan</div>
+                <div class="hero-pill">✨ Pendampingan Profesional</div>
+                <div class="hero-pill">✨ Pantau Tindak Lanjut</div>
             </div>
 
-            <div style="background: rgba(255,255,255,0.2); border-left: 4px solid white; padding: 20px 25px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); max-width: 850px;">
+            <div class="hero-quote">
                 <p style="color: white; font-size: 17px; font-weight: 700; margin: 0; font-style: italic; text-shadow: 0 1px 5px rgba(0,0,0,0.3);">
                     "Dengarkan setiap suara, lindungi setiap cerita."
                 </p>
@@ -204,13 +382,12 @@
         </div>
 
         <!-- Illustration with Logo Overlay -->
-        <div style="position: relative; z-index: 1; flex-shrink: 0;">
+        <div class="hero-illustration">
             <img src="https://images.unsplash.com/photo-1573497620053-ea5300f94f21?w=500&q=80" 
-                alt="Support illustration" 
-                style="width: 380px; height: 380px; object-fit: cover; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 4px solid rgba(255,255,255,0.2);">
+                alt="Support illustration">
             
             <!-- Logo Watermark -->
-            <div style="position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.95); padding: 12px 18px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px;">
+            <div class="hero-logo">
                 <img src="{% static 'images/logo.png' %}" alt="Ruang Dengar Logo" style="width: 32px; height: 32px;">
                 <span style="font-size: 16px; font-weight: 700; color: #3a307b;">Ruang Dengar</span>
             </div>
@@ -223,8 +400,8 @@
             50% { opacity: 0.5; }
         }
         @keyframes rotate {
-            from: { transform: rotate(0deg); }
-            to: { transform: rotate(360deg); }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 

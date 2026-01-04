@@ -237,8 +237,8 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 # Login URLs
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard_admin'
-LOGOUT_REDIRECT_URL = 'role-selection'
+LOGIN_REDIRECT_URL = 'lengkapi_profil'  # Cek profil dulu sebelum ke dashboard
+LOGOUT_REDIRECT_URL = 'login'
 
 # File Upload Settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 MB

@@ -59,7 +59,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         default=Role.USER,
     )
 
-    email = models.EmailField('Email Kampus', unique=True)
+    email = models.EmailField('Email', unique=True)
+    email_verified = models.BooleanField(default=False, help_text='Apakah email sudah diverifikasi')
+    email_verification_token = models.CharField(max_length=64, blank=True, null=True, help_text='Token verifikasi email')
+    email_verification_sent_at = models.DateTimeField(blank=True, null=True, help_text='Waktu token verifikasi dikirim')
+    password_reset_token = models.CharField(max_length=64, blank=True, null=True, help_text='Token reset password')
+    password_reset_token_created_at = models.DateTimeField(blank=True, null=True, help_text='Waktu token reset password dibuat')
     nama_lengkap = models.CharField('Nama', max_length=255)
     username = models.CharField('Username', max_length=150, unique=True, null=True, blank=True)
     nidn = models.CharField('NIDN', max_length=50, blank=True, null=True)

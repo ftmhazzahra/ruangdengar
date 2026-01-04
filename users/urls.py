@@ -2,6 +2,7 @@ from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
 from django.contrib.auth import views as auth_views
+
 from .views import (
     RoleSelectionView,
     UserRegisterView,
@@ -15,10 +16,21 @@ from .views import (
     kelola_pengguna_view,
     edit_laporan_view,
     kelola_konten_view,
+    VerifyEmailView,
+    ResendVerificationEmailView,
+    forgot_password_view,
+    reset_password_view,
     # Pastikan Anda mengimpor view untuk notifikasi jika menggunakan Class-Based View
 )
 
 urlpatterns = [
+    # Verifikasi Email
+    path('verify-email/', VerifyEmailView.as_view(), name='verify_email'),
+    # Kirim ulang email verifikasi
+    path('resend-verification/', ResendVerificationEmailView.as_view(), name='resend_verification'),
+    # Lupa Password & Reset Password
+    path('forgot-password/', forgot_password_view, name='forgot-password'),
+    path('reset-password/', reset_password_view, name='reset-password'),
     # Landing page umum
     path('', landing_view, name='landing'),
 
@@ -54,7 +66,6 @@ urlpatterns = [
     path("dashboard/user/status-laporan/", views.status_laporan_view, name="status-laporan"),
     # Laporan Terkirim User
     path("dashboard/user/laporan-terkirim/", views.laporan_terkirim_view, name="laporan-terkirim"),
-
     #Kelola Jadwal Punya Admin
     path('dashboard/kelola-jadwal/', views.kelola_jadwal_view, name='kelola-jadwal'),
     # Edit Booking Konseling (Admin)

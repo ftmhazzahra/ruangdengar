@@ -150,50 +150,32 @@ def send_urgent_laporan_alert(laporan, management_emails):
 
 def send_booking_created_notification(booking):
     """
-    Notify counselor and pelapor when booking is created
+    Notify pelapor when booking is created
     
     Args:
         booking: Booking instance
     """
-    # Email to Counselor
-    counselor_subject = f"[Ruang Dengar] Booking Baru: {booking.tanggal} {booking.waktu_mulai}"
-    counselor_context = {
-        'konselor_nama': booking.konselor.user.nama_lengkap,
-        'pelapor_nama': booking.pelapor.nama_lengkap,
-        'tanggal': booking.tanggal,
-        'waktu_mulai': booking.waktu_mulai,
-        'tipe_sesi': booking.get_tipe_sesi_display(),
-        'topik': booking.topik or 'Tidak disebutkan',
-        'booking_url': f"{settings.SITE_URL}/admin/booking/{booking.id}/",
-    }
-    
-    counselor_email_sent = send_notification_email(
-        subject=counselor_subject,
-        recipient_list=[booking.konselor.user.email],
-        template_name='emails/booking_created_counselor.html',
-        context=counselor_context
-    )
-    
     # Email to Pelapor (confirmation)
     pelapor_subject = f"[Ruang Dengar] Konfirmasi Booking Konseling"
     pelapor_context = {
-        'pelapor_nama': booking.pelapor.nama_lengkap,
-        'konselor_nama': booking.konselor.user.nama_lengkap,
+        'pelapor_nama': booking.user.nama_lengkap,
+        'konselor_nama': booking.konselor,
         'tanggal': booking.tanggal,
-        'waktu_mulai': booking.waktu_mulai,
-        'tipe_sesi': booking.get_tipe_sesi_display(),
-        'lokasi': booking.lokasi if booking.tipe_sesi == 'OFFLINE' else 'Online (Link akan dikirim H-1)',
+        'waktu_mulai': booking.waktu,
+        'tipe_sesi': booking.jenis or 'Tidak disebutkan',
+        'lokasi': booking.lokasi_konseling,
+        'topik': booking.topik or 'Tidak disebutkan',
         'booking_url': f"{settings.SITE_URL}/booking/{booking.id}/detail/",
     }
     
     pelapor_email_sent = send_notification_email(
         subject=pelapor_subject,
-        recipient_list=[booking.pelapor.email],
+        recipient_list=[booking.user.email],
         template_name='emails/booking_created_pelapor.html',
         context=pelapor_context
     )
     
-    return counselor_email_sent + pelapor_email_sent
+    return pelapor_email_sent
 
 
 def send_booking_reminder(booking):
@@ -206,18 +188,18 @@ def send_booking_reminder(booking):
     subject = f"[Ruang Dengar] Reminder: Sesi Konseling Besok"
     
     context = {
-        'pelapor_nama': booking.pelapor.nama_lengkap,
-        'konselor_nama': booking.konselor.user.nama_lengkap,
+        'pelapor_nama': booking.user.nama_lengkap,
+        'konselor_nama': booking.konselor,
         'tanggal': booking.tanggal,
-        'waktu_mulai': booking.waktu_mulai,
-        'tipe_sesi': booking.get_tipe_sesi_display(),
-        'lokasi': booking.lokasi if booking.tipe_sesi == 'OFFLINE' else 'Online',
+        'waktu_mulai': booking.waktu,
+        'tipe_sesi': booking.jenis or 'Tidak disebutkan',
+        'lokasi': booking.lokasi_konseling,
         'booking_url': f"{settings.SITE_URL}/booking/{booking.id}/detail/",
     }
     
     return send_notification_email(
         subject=subject,
-        recipient_list=[booking.pelapor.email],
+        recipient_list=[booking.user.email],
         template_name='emails/booking_reminder.html',
         context=context
     )

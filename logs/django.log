@@ -1,0 +1,2 @@
+WARNING 2026-01-04 15:51:52,802 log 33384 4576 Not Found: /favicon.ico
+WARNING 2026-01-04 15:51:52,803 basehttp 33384 4576 "GET /favicon.ico HTTP/1.1" 404 17588

@@ -52,7 +52,7 @@ class CustomUserCreationForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         self.fields['nama_lengkap'].label = "Nama Lengkap"
         self.fields['nim'].label = "NIM"
-        self.fields['email'].label = "Email Kampus"
+        self.fields['email'].label = "Email"
         self.fields['fakultas'].label = "Fakultas"
         self.fields['status_pengguna'].label = "Status"
         self.fields['usia'].label = "Usia"
@@ -60,7 +60,7 @@ class CustomUserCreationForm(UserCreationForm):
         self.fields['password1'].label = "Password"
         self.fields['password2'].label = "Konfirmasi Password"
 
-        self.fields['email'].widget.attrs.update({'placeholder': 'contoh@student.telkomuniversity.ac.id'})
+        self.fields['email'].widget.attrs.update({'placeholder': 'contoh@email.com'})
         self.fields['nim'].widget.attrs.update({'placeholder': 'Contoh: 1301190123'})
         self.fields['fakultas'].widget.attrs.update({'id': 'id_fakultas'})
         self.fields['usia'].widget.attrs.update({'placeholder': 'Contoh: 20', 'min': '17', 'max': '100'})
@@ -94,11 +94,11 @@ class AdminUserCreationForm(UserCreationForm):
         self.fields['nama_lengkap'].label = "Nama"
         self.fields['username'].label = "Username"
         self.fields['nidn'].label = "NIDN"
-        self.fields['email'].label = "Email Kampus"
+        self.fields['email'].label = "Email"
         self.fields['password1'].label = "Password"
         self.fields['password2'].label = "Konfirmasi Password"
 
-        self.fields['email'].widget.attrs.update({'placeholder': 'contoh.email@gmail.com'})
+        self.fields['email'].widget.attrs.update({'placeholder': 'contoh@email.com'})
         self.fields['password1'].widget.attrs.update({'placeholder': 'Minimal 8 karakter (huruf + angka)'})
         self.fields['password2'].widget.attrs.update({'placeholder': 'Minimal 8 karakter (huruf + angka)'})
     
@@ -275,6 +275,60 @@ class ChangePasswordForm(forms.Form):
                 raise forms.ValidationError('Password minimal 8 karakter')
             # Validasi kekuatan password
             validate_password_strength(new_password1)
+        
+        return cleaned_data
+
+
+# --- Form Lupa Password ---
+class ForgotPasswordForm(forms.Form):
+    email = forms.EmailField(
+        label='Email Terdaftar',
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'Masukkan email Anda',
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+        })
+    )
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError('Email ini tidak terdaftar di sistem.')
+        return email
+
+
+# --- Form Reset Password ---
+class ResetPasswordForm(forms.Form):
+    new_password1 = forms.CharField(
+        label='Password Baru',
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Minimal 8 karakter (huruf + angka)',
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+        })
+    )
+    new_password2 = forms.CharField(
+        label='Konfirmasi Password Baru',
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Ulangi password baru',
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+        })
+    )
+    
+    def clean_new_password1(self):
+        new_password1 = self.cleaned_data.get('new_password1')
+        if new_password1:
+            validate_password_strength(new_password1)
+        return new_password1
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password1 = cleaned_data.get('new_password1')
+        new_password2 = cleaned_data.get('new_password2')
+        
+        if new_password1 and new_password2:
+            if new_password1 != new_password2:
+                raise forms.ValidationError('Password baru tidak cocok')
+            if len(new_password1) < 8:
+                raise forms.ValidationError('Password minimal 8 karakter')
         
         return cleaned_data
 

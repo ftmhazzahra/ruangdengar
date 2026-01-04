@@ -32,6 +32,38 @@
         height: 100vh;
       }
 
+      /* --- Hamburger & Overlay (mobile) --- */
+      .hamburger-btn {
+        display: none;
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 1100;
+        background: #5a509b;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 12px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+      }
+
+      .hamburger-btn span {
+        display: block;
+        width: 24px;
+        height: 3px;
+        background: #ffffff;
+        margin: 4px 0;
+        border-radius: 999px;
+      }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1080;
+      }
+
       /* --- 1. Sidebar (Kiri) --- */
       .sidebar {
         width: 260px;
@@ -86,7 +118,8 @@
         border-radius: 8px;
         margin-bottom: 5px;
         transition: background-color 0.3s ease, color 0.3s ease;
-        font-size: 14px;
+        font-size: 13px;
+        font-weight: 500;
       }
       .sidebar-nav li a span {
         display: flex;
@@ -153,13 +186,18 @@
       .logout-link {
         display: flex;
         align-items: center;
-        gap: 5px;
-        padding: 10px 15px;
-        color: #000000;
+        gap: 10px;
+        padding: 11px 15px;
+        color: #333;
         border-radius: 8px;
-        font-size: 14px;
-        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 500;
         text-decoration: none;
+        margin-bottom: 6px;
+        transition: 0.2s;
+      }
+      .logout-link svg {
+        flex-shrink: 0;
       }
       .logout-link:hover {
         background-color: #5a509b;
@@ -244,6 +282,75 @@
         text-decoration: underline;
       }
 
+      /* --- Responsive --- */
+      @media (max-width: 1024px) {
+        .hamburger-btn {
+          display: block;
+        }
+
+        .sidebar {
+          left: -280px;
+          transition: left 0.3s ease;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.16);
+        }
+
+        .sidebar.active {
+          left: 0;
+        }
+
+        .sidebar-overlay.active {
+          display: block;
+        }
+
+        .main-content {
+          margin-left: 0;
+          width: 100%;
+        }
+
+        .main-header {
+          padding: 72px 20px 18px 20px;
+        }
+
+        .scrollable-content {
+          padding: 20px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .sidebar {
+          width: 240px;
+          padding: 16px;
+        }
+
+        .sidebar-header h2 {
+          font-size: 18px;
+        }
+
+        .sidebar-nav li a {
+          font-size: 13px;
+          padding: 10px 12px;
+        }
+
+        .main-header {
+          padding-top: 70px;
+        }
+
+        .header-user-info {
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .scrollable-content {
+          padding: 16px 14px;
+        }
+
+        .main-footer {
+          flex-direction: column;
+          gap: 10px;
+          text-align: center;
+        }
+      }
+
       /* Logout Confirmation Modal */
       .logout-modal {
         display: none;
@@ -326,6 +433,12 @@
   </head>
   <body>
     {% csrf_token %}
+    <button class="hamburger-btn" onclick="toggleSidebar()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
     <div class="app-container">
       <aside class="sidebar">
         <div class="sidebar-header">
@@ -502,6 +615,21 @@
     </div>
 
     <script>
+      function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+      }
+
+      document.querySelectorAll('.sidebar-nav a').forEach(link => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth <= 1024) {
+            toggleSidebar();
+          }
+        });
+      });
+
       function showLogoutModal() {
         document.getElementById('logoutModal').style.display = 'block';
       }

@@ -19,13 +19,34 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+import os
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9sci)w)lft+h*!ft=h(na-+(p@_37$0m6tzly&*osb$(=c4qc9'
+# Use environment variable in production
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-only-key-replace-in-production')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# --- DEVELOPMENT vs PRODUCTION SETTINGS ---
+# Set environment variable: DJANGO_ENV=production di VPS
+# Di local development, biarkan default (development)
+ENVIRONMENT = os.environ.get('DJANGO_ENV', 'development')
 
-ALLOWED_HOSTS = []
+if ENVIRONMENT == 'production':
+    DEBUG = False
+    # Load from environment variable, fallback to default list
+    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '157.66.34.207,ruangdengar.cloud,www.ruangdengar.cloud').split(',')
+    # Security settings for production
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+else:
+    # Development settings (untuk run di local)
+    DEBUG = True
+    ALLOWED_HOSTS = ['*']  # Allow semua host untuk development
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
 
 
 # Application definition
@@ -54,6 +75,7 @@ SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files serving
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -94,38 +116,27 @@ WSGI_APPLICATION = 'ruangdengar.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ruangdengar_db',
-        'USER': 'postgres',
-        'PASSWORD': 'V!nividivic1',
-        'HOST': 'localhost',
-        'PORT': '5432',
+if ENVIRONMENT == 'production':
+    # Production: PostgreSQL - ALL parameters REQUIRED
+    DATABASES = {
+        'default': {
+            'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
+            'NAME': os.environ.get('DB_NAME'),  # REQUIRED
+            'USER': os.environ.get('DB_USER'),  # REQUIRED
+            'PASSWORD': os.environ.get('DB_PASSWORD'),  # REQUIRED
+            'HOST': os.environ.get('DB_HOST'),  # REQUIRED - no localhost default
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'CONN_MAX_AGE': 600,  # Connection pooling
+        }
     }
-}
-
-# Uncomment untuk kembali ke SQLite (development)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-# ATAU gunakan user lain jika ada:
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'ruangdengar_db',
-#         'USER': 'nama_user_lain',
-#         'PASSWORD': 'password_user_lain',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-#     }
-# }
+else:
+    # Development: SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -159,29 +170,34 @@ USE_I18N = True
 USE_TZ = True
 
 # ==================== EMAIL CONFIGURATION ====================
-# Email backend for development (console output)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# For production, use SMTP (uncomment and configure in production settings):
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@example.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
-
-DEFAULT_FROM_EMAIL = 'noreply@ruangdengar.telkomuniversity.ac.id'
-SITE_URL = 'http://localhost:8000'  # Update untuk production
+if ENVIRONMENT == 'production':
+    # Production email config - from environment variables only
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')  # REQUIRED - no default
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')  # REQUIRED
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+    SITE_URL = os.environ.get('SITE_URL', 'https://ruangdengar.cloud')
+else:
+    # Development: Console backend for testing
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'noreply@ruangdengar.local'
+    SITE_URL = 'http://localhost:8000'
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+
+# Folder hasil collectstatic untuk production
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -198,15 +214,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_REDIRECT_URL = 'lengkapi_profil'  # Redirect ke lengkapi profil dulu, nanti cek kelengkapan
 ACCOUNT_LOGOUT_REDIRECT_URL = 'login'
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Wajib verifikasi email
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_USERNAME_REQUIRED = False
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_QUERY_EMAIL = True
 
-# Allowed email domains (restrict ke email Telkom University)
-ACCOUNT_ADAPTER = 'users.adapters.EmailDomainAdapter'
-ALLOWED_EMAIL_DOMAINS = ['telkomuniversity.ac.id', 'student.telkomuniversity.ac.id']
+# Email domain restriction (comment out for testing with Gmail)
+# ACCOUNT_ADAPTER = 'users.adapters.EmailDomainAdapter'
+# ALLOWED_EMAIL_DOMAINS = ['telkomuniversity.ac.id', 'student.telkomuniversity.ac.id']
 
 # Microsoft OAuth Settings (Azure AD)
 # IMPORTANT: Client ID dan Secret diisi via Django Admin > Social Applications
@@ -224,3 +240,52 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     }
 }
+
+# ==================== LOGGING CONFIGURATION ====================
+import logging.handlers
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'users': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
+# Create logs directory if not exists
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)

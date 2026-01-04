@@ -1,3 +1,63 @@
+# View untuk kirim ulang email verifikasi
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View as DjangoView
+
+class ResendVerificationEmailView(DjangoView):
+    def get(self, request):
+        return render(request, 'users/resend_verification.html')
+
+    def post(self, request):
+        from .email_utils import send_notification_email
+        import secrets
+        email = request.POST.get('email')
+        user = CustomUser.objects.filter(email=email).first()
+        if not user:
+            messages.error(request, 'Email tidak ditemukan.')
+            return render(request, 'users/resend_verification.html')
+        if user.email_verified:
+            messages.info(request, 'Email sudah diverifikasi. Silakan login.')
+            return render(request, 'users/resend_verification.html')
+        # Generate token baru dan kirim ulang email verifikasi
+        user.email_verification_token = secrets.token_urlsafe(32)
+        user.save()
+        verify_url = request.build_absolute_uri(f"/verify-email/?token={user.email_verification_token}&email={user.email}")
+        context = {'user': user, 'verify_url': verify_url}
+        send_notification_email(
+            subject='Verifikasi Email Akun Ruang Dengar',
+            recipient_list=[user.email],
+            template_name='emails/email_confirm.html',
+            context=context,
+            fail_silently=False
+        )
+        messages.success(request, 'Email verifikasi sudah dikirim ulang. Silakan cek inbox Anda.')
+        return render(request, 'users/resend_verification.html')
+# View untuk verifikasi email
+from django.views import View
+from django.shortcuts import get_object_or_404
+from .models import CustomUser
+from django.utils import timezone
+
+class VerifyEmailView(View):
+    def get(self, request):
+        token = request.GET.get('token')
+        email = request.GET.get('email')
+        user = get_object_or_404(CustomUser, email=email, email_verification_token=token)
+        if not user.email_verified:
+            user.email_verified = True
+            user.email_verification_token = None
+            # Jika admin, tetap tidak aktif sampai disetujui super admin
+            if user.role == CustomUser.Role.ADMIN:
+                user.is_active = False
+                user.save()
+                messages.success(request, 'Email berhasil diverifikasi! Akun Anda menunggu persetujuan super admin.')
+            else:
+                user.is_active = True
+                user.save()
+                messages.success(request, 'Email berhasil diverifikasi! Silakan login.')
+        else:
+            messages.info(request, 'Email sudah diverifikasi. Silakan login.')
+        return redirect('login')
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from types import SimpleNamespace
@@ -45,7 +105,7 @@ def lengkapi_profil_view(request):
     # Jika profil sudah lengkap, redirect ke dashboard
     if user.is_profile_complete:
         if user.role == CustomUser.Role.ADMIN:
-            return redirect('dashboard')
+            return redirect('dashboard_admin')
         else:
             return redirect('dashboard_user')
     
@@ -76,7 +136,7 @@ def lengkapi_profil_view(request):
         
         # Redirect berdasarkan role
         if user.role == CustomUser.Role.ADMIN:
-            return redirect('dashboard')
+            return redirect('dashboard_admin')
         else:
             return redirect('dashboard_user')
     
@@ -95,7 +155,32 @@ class UserRegisterView(generic.CreateView):
     success_url = reverse_lazy('login')
 
     def form_valid(self, form):
-        messages.success(self.request, 'Akun Pengguna berhasil dibuat! Silakan login.')
+        import secrets
+        from django.utils import timezone
+        from .email_utils import send_notification_email
+        user = form.save(commit=False)
+        user.is_active = False  # User tidak bisa login sebelum verifikasi
+        user.email_verified = False
+        user.email_verification_token = secrets.token_urlsafe(32)
+        user.email_verification_sent_at = timezone.now()
+        user.save()
+
+        # Kirim email verifikasi
+        verify_url = self.request.build_absolute_uri(
+            f"/verify-email/?token={user.email_verification_token}&email={user.email}"
+        )
+        context = {
+            'user': user,
+            'verify_url': verify_url,
+        }
+        send_notification_email(
+            subject='Verifikasi Email Akun Ruang Dengar',
+            recipient_list=[user.email],
+            template_name='emails/email_confirm.html',
+            context=context,
+            fail_silently=False
+        )
+        messages.success(self.request, 'Akun berhasil dibuat! Silakan cek email Anda untuk verifikasi sebelum login.')
         return super().form_valid(form)
 
 
@@ -106,12 +191,34 @@ class AdminRegisterView(generic.CreateView):
     success_url = reverse_lazy('login')
 
     def form_valid(self, form):
+        import secrets
+        from django.utils import timezone
+        from .email_utils import send_notification_email
         # Set akun admin baru sebagai pending (tidak aktif) dan belum disetujui
         user = form.save(commit=False)
         user.is_active = False  # Akun tidak aktif sampai disetujui
         user.is_approved = False  # Belum disetujui
+        user.email_verified = False
+        user.email_verification_token = secrets.token_urlsafe(32)
+        user.email_verification_sent_at = timezone.now()
         user.save()
-        messages.success(self.request, 'Pendaftaran admin berhasil! Akun Anda menunggu persetujuan dari super admin.')
+
+        # Kirim email verifikasi
+        verify_url = self.request.build_absolute_uri(
+            f"/verify-email/?token={user.email_verification_token}&email={user.email}"
+        )
+        context = {
+            'user': user,
+            'verify_url': verify_url,
+        }
+        send_notification_email(
+            subject='Verifikasi Email Akun Admin Ruang Dengar',
+            recipient_list=[user.email],
+            template_name='emails/email_confirm.html',
+            context=context,
+            fail_silently=False
+        )
+        messages.success(self.request, 'Pendaftaran admin berhasil! Silakan cek email Anda untuk verifikasi sebelum menunggu persetujuan super admin.')
         return redirect(self.success_url)
 
 
@@ -139,20 +246,23 @@ class CustomLoginView(auth_views.LoginView):
             messages.info(self.request, 'Anda akan logout otomatis saat browser ditutup.')
         else:
             self.request.session.set_expiry(None)
-        
-        # Cek jika user admin dan belum diapprove
+
         user = form.get_user()
+        # Cek jika user belum verifikasi email, kecuali superuser
+        if not user.email_verified and not user.is_superuser:
+            messages.error(self.request, 'Akun Anda belum diverifikasi. Silakan cek email Anda untuk verifikasi sebelum login.')
+            return redirect('login')
+        # Cek jika user admin dan belum diapprove
         if user.role == CustomUser.Role.ADMIN and not user.is_approved:
             messages.error(self.request, 'Akun admin Anda masih menunggu persetujuan. Silakan hubungi super admin.')
             return redirect('login')
-        
         return super().form_valid(form)
 
 
 # 🧩 Dashboard Admin
 @login_required(login_url='login')
 def dashboard_admin_view(request):
-    print(f"DEBUG dashboard_admin: user={request.user.email}, role={request.user.role}, is_admin={request.user.role == CustomUser.Role.ADMIN}")
+    logger.debug(f"dashboard_admin: user={request.user.email}, role={request.user.role}, is_admin={request.user.role == CustomUser.Role.ADMIN}")
     if request.user.role != CustomUser.Role.ADMIN:
         messages.error(request, 'Anda tidak memiliki akses ke halaman ini.')
         return redirect('dashboard_user')
@@ -199,7 +309,15 @@ def dashboard_admin_view(request):
     # Generate last 12 months labels
     from calendar import month_abbr
     import locale
-    locale.setlocale(locale.LC_TIME, 'id_ID.UTF-8')  # Indonesian locale
+    
+    # Try to set Indonesian locale, fall back to default if not available
+    try:
+        locale.setlocale(locale.LC_TIME, 'id_ID.UTF-8')
+    except locale.Error:
+        try:
+            locale.setlocale(locale.LC_TIME, 'id_ID')
+        except locale.Error:
+            pass  # Use system default locale
     
     months_labels = []
     months_data = {}
@@ -291,7 +409,7 @@ def dashboard_admin_view(request):
 # 🧩 Halaman Kelola Jadwal Konseling (Admin)
 @login_required(login_url='login')
 def kelola_jadwal_view(request):
-    print(f"DEBUG kelola_jadwal: user={request.user.email}, role={request.user.role}, is_admin={request.user.role == CustomUser.Role.ADMIN}")
+    logger.debug(f"kelola_jadwal: user={request.user.email}, role={request.user.role}, is_admin={request.user.role == CustomUser.Role.ADMIN}")
     if request.user.role != CustomUser.Role.ADMIN:
         messages.error(request, 'Anda tidak memiliki akses ke halaman ini.')
         return redirect('dashboard_user')
@@ -316,8 +434,8 @@ def kelola_jadwal_view(request):
         topik = request.POST.get('topik', '').strip()
         jenis = request.POST.get('jenis', '').strip()
         
-        # Debug: print what we received
-        print(f"DEBUG Add Booking: user_id={user_id}, tanggal={tanggal}, waktu={waktu}, konselor_id={konselor_id}, jenis={jenis}")
+        # Debug: log what we received
+        logger.debug(f"Add Booking: user_id={user_id}, tanggal={tanggal}, waktu={waktu}, konselor_id={konselor_id}, jenis={jenis}")
         
         if not all([user_id, tanggal, waktu, konselor_id, jenis]):
             missing = []
@@ -368,19 +486,12 @@ def kelola_jadwal_view(request):
                 catatan_admin=catatan if catatan else None
             )
             
-            # Debug output
-            print(f"DEBUG Booking created:")
-            print(f"  - Booking ID: {booking.id}")
-            print(f"  - User ID (FK): {booking.user.id}")
-            print(f"  - User email: {booking.user.email}")
-            print(f"  - User nama_lengkap: {booking.user.nama_lengkap}")
-            print(f"  - Booking.nama field: {booking.nama}")
-            print(f"  - Tanggal: {booking.tanggal}")
-            print(f"  - Waktu: {booking.waktu}")
+            # Log booking creation
+            logger.debug(f"Booking created: ID={booking.id}, user_id={booking.user.id}, email={booking.user.email}, nama_lengkap={booking.user.nama_lengkap}, tanggal={booking.tanggal}, waktu={booking.waktu}")
             
             # Verify it can be queried back
             test_query = Booking.objects.filter(user=user).count()
-            print(f"  - Total bookings for this user: {test_query}")
+            logger.debug(f"Total bookings for this user: {test_query}")
             
             messages.success(request, f'Jadwal konseling untuk {user.nama_lengkap} berhasil ditambahkan.')
         except CustomUser.DoesNotExist:
@@ -392,10 +503,31 @@ def kelola_jadwal_view(request):
         
         return redirect('kelola-jadwal')
 
-    # Filter: 7 hari terakhir sampai tanggal ke depan (upcoming and recent)
+    # Base query: default 7 hari terakhir sampai tanggal ke depan
     today = timezone.now().date()
     seven_days_ago = today - timedelta(days=7)
-    bookings = Booking.objects.select_related('user', 'konselor_fk').filter(tanggal__gte=seven_days_ago).order_by('-tanggal', '-waktu')
+    bookings = Booking.objects.select_related('user', 'konselor_fk').filter(tanggal__gte=seven_days_ago)
+    
+    # Apply filters from GET parameters
+    tanggal_dari = request.GET.get('tanggal_dari')
+    tanggal_sampai = request.GET.get('tanggal_sampai')
+    konselor_id = request.GET.get('konselor')
+    jenis = request.GET.get('jenis')
+    status = request.GET.get('status')
+    
+    if tanggal_dari:
+        bookings = bookings.filter(tanggal__gte=tanggal_dari)
+    if tanggal_sampai:
+        bookings = bookings.filter(tanggal__lte=tanggal_sampai)
+    if konselor_id and konselor_id != 'semua':
+        bookings = bookings.filter(konselor_fk_id=konselor_id)
+    if jenis and jenis != 'semua':
+        bookings = bookings.filter(jenis=jenis)
+    if status and status != 'semua':
+        bookings = bookings.filter(status=status.lower())
+    
+    # Order by date and time descending
+    bookings = bookings.order_by('-tanggal', '-waktu')
     counselors = Counselor.objects.all()
     users = CustomUser.objects.filter(role=CustomUser.Role.USER).order_by('nim', 'nama_lengkap')
     
@@ -927,7 +1059,7 @@ def kelola_pengguna_view(request):
     # Ambil semua user aktif untuk ditampilkan di tabel
     active_users = CustomUser.objects.filter(is_active=True).order_by('-id')
     
-    print(f"DEBUG Kelola Pengguna: Pending admins = {pending_admins.count()}, Active users = {active_users.count()}")
+    logger.debug(f"Kelola Pengguna: Pending admins = {pending_admins.count()}, Active users = {active_users.count()}")
     
     return render(request, 'dashboard/kelola_pengguna.html', {
         'nama_user': request.user.nama_lengkap,
@@ -1382,7 +1514,7 @@ def get_konten_api(request, konten_id):
 # Detail Artikel STATIS (VIEW BARU)
 @login_required(login_url='login')
 def artikel_detail_view(request, id):
-    print(f"DEBUG artikel_detail: user={request.user.email}, role={request.user.role}, is_user={request.user.role == CustomUser.Role.USER}")
+    logger.debug(f"artikel_detail: user={request.user.email}, role={request.user.role}, is_user={request.user.role == CustomUser.Role.USER}")
     if request.user.role != CustomUser.Role.USER:
         messages.error(request, 'Anda tidak memiliki akses ke halaman ini.')
         return redirect('dashboard_admin' if request.user.role == CustomUser.Role.ADMIN else 'login')
@@ -1407,7 +1539,7 @@ def artikel_detail_view(request, id):
 
 @login_required(login_url='login')
 def buat_laporan_view(request):
-    print(f"DEBUG buat_laporan: user={request.user.email}, role={request.user.role}, is_user={request.user.role == CustomUser.Role.USER}")
+    logger.debug(f"buat_laporan: user={request.user.email}, role={request.user.role}, is_user={request.user.role == CustomUser.Role.USER}")
     if request.user.role != CustomUser.Role.USER:
         messages.error(request, 'Anda tidak memiliki akses ke halaman ini.')
         return redirect('dashboard_admin' if request.user.role == CustomUser.Role.ADMIN else 'login')
@@ -1599,7 +1731,7 @@ def buat_laporan_view(request):
 
 @login_required(login_url='login')
 def riwayat_laporan_view(request):
-    print(f"DEBUG riwayat_laporan: user={request.user.email}, role={request.user.role}, is_user={request.user.role == CustomUser.Role.USER}")
+    logger.debug(f"riwayat_laporan: user={request.user.email}, role={request.user.role}, is_user={request.user.role == CustomUser.Role.USER}")
     if request.user.role != CustomUser.Role.USER:
         messages.error(request, 'Anda tidak memiliki akses ke halaman ini.')
         return redirect('dashboard_admin' if request.user.role == CustomUser.Role.ADMIN else 'login')
@@ -1675,7 +1807,7 @@ def detail_laporan_view(request, report_id):
 @login_required(login_url='login')
 def booking_konseling_view(request):
     # Only allow USER role to access this view
-    print(f"DEBUG booking_konseling: user={request.user.email}, role={request.user.role}, is_user={request.user.role == CustomUser.Role.USER}")
+    logger.debug(f"booking_konseling: user={request.user.email}, role={request.user.role}, is_user={request.user.role == CustomUser.Role.USER}")
     if request.user.role != CustomUser.Role.USER:
         messages.error(request, 'Anda tidak memiliki akses ke halaman ini.')
         return redirect('dashboard_admin' if request.user.role == CustomUser.Role.ADMIN else 'login')
@@ -1746,7 +1878,7 @@ def booking_konseling_view(request):
             # 📧 Email Notification ke Counselor & Pelapor
             send_booking_created_notification(booking)
             
-            print(f"DEBUG User Booking created: ID={booking.id}, user_id={booking.user.id}, nama={booking.nama}")
+            logger.debug(f"User Booking created: ID={booking.id}, user_id={booking.user.id}, nama={booking.nama}")
             messages.success(request, 'Booking berhasil dibuat.')
             return redirect('booking-konseling')
             
@@ -1759,9 +1891,9 @@ def booking_konseling_view(request):
 
     # GET: show booking form and current user's bookings
     bookings = Booking.objects.filter(user=request.user).order_by('-tanggal', '-waktu')
-    print(f"DEBUG User View: user={request.user.id}, bookings count={bookings.count()}")
+    logger.debug(f"User View: user={request.user.id}, bookings count={bookings.count()}")
     for b in bookings:
-        print(f"  - Booking ID={b.id}, tanggal={b.tanggal}, user_id={b.user.id}, nama={b.nama}")
+        logger.debug(f"Booking ID={b.id}, tanggal={b.tanggal}, user_id={b.user.id}, nama={b.nama}")
     counselors = Counselor.objects.all()
     return render(request, 'menu_users/booking_konseling.html', {
         'nama_user': request.user.nama_lengkap,
@@ -2118,9 +2250,129 @@ def mark_all_notifications_read_view(request):
 
 def kebijakan_privasi_view(request):
     """Halaman kebijakan privasi dan kerahasiaan"""
-    return render(request, 'menu_users/kebijakan_privasi.html')
+    if request.user.is_authenticated:
+        context = {
+            'nama_user': request.user.nama_lengkap,
+            'email_user': request.user.email,
+        }
+    else:
+        context = {}
+    return render(request, 'menu_users/kebijakan_privasi.html', context)
 
 
 def bantuan_view(request):
     """Halaman bantuan dan kontak"""
-    return render(request, 'menu_users/bantuan.html')
+    if request.user.is_authenticated:
+        context = {
+            'nama_user': request.user.nama_lengkap,
+            'email_user': request.user.email,
+        }
+    else:
+        context = {}
+    return render(request, 'menu_users/bantuan.html', context)
+
+
+# 🔐 FORGOT PASSWORD & RESET PASSWORD VIEWS
+def forgot_password_view(request):
+    """View untuk halaman lupa password - user input email"""
+    from .forms import ForgotPasswordForm
+    from .email_utils import send_notification_email
+    import secrets
+    from django.utils import timezone
+    
+    if request.method == 'POST':
+        form = ForgotPasswordForm(request.POST)
+        if form.is_valid():
+            try:
+                email = form.cleaned_data['email']
+                user = CustomUser.objects.get(email=email)
+                
+                # Generate reset token
+                reset_token = secrets.token_urlsafe(32)
+                user.password_reset_token = reset_token
+                user.password_reset_token_created_at = timezone.now()
+                user.save()
+                
+                # Buat reset URL
+                reset_url = request.build_absolute_uri(f"/reset-password/?token={reset_token}&email={user.email}")
+                
+                logger.info(f"🔐 Generating reset password for user: {user.email}")
+                logger.info(f"📧 Reset URL: {reset_url}")
+                
+                # Kirim email dengan reset link
+                context = {
+                    'user': user,
+                    'reset_url': reset_url,
+                    'token_valid_hours': 24
+                }
+                
+                logger.info(f"📤 Attempting to send password reset email to {user.email}...")
+                result = send_notification_email(
+                    subject='Reset Password Akun Ruang Dengar',
+                    recipient_list=[user.email],
+                    template_name='emails/password_reset.html',
+                    context=context,
+                    fail_silently=False
+                )
+                logger.info(f"✅ Email sent successfully! Result: {result}")
+                
+                messages.success(
+                    request, 
+                    'Email reset password telah dikirim. Silakan cek inbox atau folder spam Anda. Link berlaku selama 24 jam.'
+                )
+                return redirect('login')
+            
+            except Exception as e:
+                logger.error(f"❌ Error in forgot_password_view: {str(e)}", exc_info=True)
+                messages.error(request, f'Terjadi kesalahan: {str(e)}')
+        else:
+            logger.warning(f"Invalid form submission for forgot password. Errors: {form.errors}")
+    else:
+        form = ForgotPasswordForm()
+    
+    return render(request, 'users/forgot_password.html', {'form': form})
+
+
+def reset_password_view(request):
+    """View untuk halaman reset password - user input password baru"""
+    from .forms import ResetPasswordForm
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    token = request.GET.get('token')
+    email = request.GET.get('email')
+    
+    # Validasi token dan email
+    try:
+        user = CustomUser.objects.get(email=email, password_reset_token=token)
+    except CustomUser.DoesNotExist:
+        messages.error(request, 'Link reset password tidak valid atau email tidak ditemukan.')
+        return redirect('login')
+    
+    # Cek apakah token sudah expired (24 jam)
+    if user.password_reset_token_created_at:
+        token_age = timezone.now() - user.password_reset_token_created_at
+        if token_age > timedelta(hours=24):
+            messages.error(request, 'Link reset password sudah expired. Silakan minta link baru.')
+            return redirect('forgot-password')
+    
+    if request.method == 'POST':
+        form = ResetPasswordForm(request.POST)
+        if form.is_valid():
+            new_password = form.cleaned_data['new_password1']
+            user.set_password(new_password)
+            user.password_reset_token = None
+            user.password_reset_token_created_at = None
+            user.save()
+            
+            messages.success(request, 'Password berhasil direset! Silakan login dengan password baru Anda.')
+            return redirect('login')
+    else:
+        form = ResetPasswordForm()
+    
+    context = {
+        'form': form,
+        'token': token,
+        'email': email,
+    }
+    return render(request, 'users/reset_password.html', context)

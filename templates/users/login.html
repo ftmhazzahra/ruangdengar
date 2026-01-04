@@ -366,7 +366,7 @@
                 {% csrf_token %}
 
                 <div class="form-group">
-                    <label for="{{ form.username.id_for_label }}">Email Kampus</label>
+                    <label for="{{ form.username.id_for_label }}">Email</label>
                     {{ form.username }}
                     {{ form.username.errors }}
                 </div>
@@ -385,31 +385,21 @@
                         {{ form.remember_me }}
                         Remember me
                     </label>
-                    <a href="#">Forgot password?</a>
+                    <a href="{% url 'forgot-password' %}">Forgot password?</a>
                 </div>
 
                 <button type="submit">Login</button>
             </form>
 
-            <p class="register-link">
-    Belum Punya Akun? <a href="{% url 'select_role' %}">Registrasi</a>
-</p>
 
-            <div class="social-divider">Atau login dengan</div>
-            
-            <a href="{% url 'microsoft_login' %}" style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 14px 20px; background: white; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; color: #333; text-decoration: none; gap: 12px; margin-bottom: 10px;">
-                <svg width="20" height="20" viewBox="0 0 23 23">
-                    <rect fill="#f25022" width="11" height="11"/>
-                    <rect fill="#00a4ef" x="12" width="11" height="11"/>
-                    <rect fill="#7fba00" y="12" width="11" height="11"/>
-                    <rect fill="#ffb900" x="12" y="12" width="11" height="11"/>
-                </svg>
-                Login dengan Microsoft
-            </a>
-            
-            <p style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">
-                🔒 Hanya untuk email <strong>@telkomuniversity.ac.id</strong>
+            <p class="register-link">
+                Belum Punya Akun? <a href="{% url 'select_role' %}">Registrasi</a>
             </p>
+            <p style="text-align:center; margin-top:10px;">
+                Belum menerima email verifikasi? <a href="{% url 'resend_verification' %}">Kirim ulang email verifikasi</a>
+            </p>
+
+            <!-- Tombol login Microsoft dihapus, hanya login manual dan Google yang tersedia -->
         </div>
 
         <div class="branding-container">

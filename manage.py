@@ -6,7 +6,18 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ruangdengar.settings')
+    # Auto-detect environment and choose appropriate settings
+    environment = os.environ.get('DJANGO_ENV', 'development')
+    
+    if environment == 'production':
+        # Production must use settings_production
+        settings_module = 'ruangdengar.settings_production'
+    else:
+        # Development uses standard settings
+        settings_module = 'ruangdengar.settings'
+    
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
+    
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

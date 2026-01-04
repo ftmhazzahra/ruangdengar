@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.conf import settings
 from users.models import CustomUser
 
 
@@ -32,6 +33,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f'Email: {email}'))
             self.stdout.write(self.style.SUCCESS(f'Password: {password}'))
             self.stdout.write(self.style.SUCCESS(f''))
-            self.stdout.write(self.style.SUCCESS(f'Login di: http://127.0.0.1:8000/admin'))
+            self.stdout.write(self.style.SUCCESS(f'Login di: {settings.SITE_URL}/admin'))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'❌ Error: {str(e)}'))

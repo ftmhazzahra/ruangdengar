@@ -1,0 +1,43 @@
+[Unit]
+Description=Ruang Dengar Django Application
+After=network.target postgresql.service
+
+[Service]
+Type=notify
+
+# Run as www-data user
+User=www-data
+Group=www-data
+
+# Working directory
+WorkingDirectory=/path/to/project
+
+# Environment variables - EDIT THIS!
+Environment="DJANGO_ENV=production"
+EnvironmentFile=/path/to/project/.env
+
+# Gunicorn command
+ExecStart=/path/to/venv/bin/gunicorn \
+    --workers 4 \
+    --worker-class sync \
+    --worker-tmp-dir /dev/shm \
+    --bind unix:/tmp/ruangdengar.sock \
+    --access-logfile /var/log/gunicorn/ruangdengar_access.log \
+    --error-logfile /var/log/gunicorn/ruangdengar_error.log \
+    --log-level info \
+    --timeout 120 \
+    ruangdengar.wsgi:application
+
+# Auto restart on failure
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ruangdengar
+
+# Process limits
+LimitNOFILE=65535
+LimitNPROC=65535
+
+[Install]
+WantedBy=multi-user.target

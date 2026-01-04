@@ -66,9 +66,22 @@
                 </div>
 
                 <!-- Mobile Menu Button -->
-                <button class="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition duration-150">
+                <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition duration-150">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                 </button>
+            </div>
+
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-200">
+                <nav class="container mx-auto px-4 py-4 space-y-3">
+                    <a href="#beranda" class="block py-2 text-gray-600 hover:text-[#483d8b] font-medium transition">Beranda</a>
+                    <a href="#fitur" class="block py-2 text-gray-600 hover:text-[#483d8b] font-medium transition">Fitur</a>
+                    <a href="#tentang" class="block py-2 text-gray-600 hover:text-[#483d8b] font-medium transition">Tentang</a>
+                    <a href="#kontak" class="block py-2 text-gray-600 hover:text-[#483d8b] font-medium transition">Kontak</a>
+                    <hr class="my-2">
+                    <a href="{% url 'select_role' %}" class="block py-2 text-[#483d8b] border border-[#483d8b] rounded-lg hover:bg-purple-50 transition text-center font-semibold">Daftar</a>
+                    <a href="{% url 'login' %}" class="block py-2 text-white bg-[#483d8b] rounded-lg hover:bg-[#5a4f9d] transition text-center font-semibold">Masuk</a>
+                </nav>
             </div>
         </div>
     </header>
@@ -585,6 +598,22 @@
     <!-- Initialize Lucide Icons -->
     <script>
         lucide.createIcons();
+
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking a link
+        const mobileMenuLinks = mobileMenu.querySelectorAll('a[href^="#"]');
+        mobileMenuLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
         
         // Update active navigation link on scroll
         const sections = document.querySelectorAll('section[id]');
