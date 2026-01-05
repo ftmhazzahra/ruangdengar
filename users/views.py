@@ -1938,7 +1938,13 @@ def booking_konseling_view(request):
 
         # Validate required fields
         if not all([tanggal, waktu, konselor_input, jenis]):
-            messages.error(request, 'Semua field wajib diisi.')
+            errors = []
+            if not tanggal: errors.append('Tanggal')
+            if not waktu: errors.append('Waktu')
+            if not konselor_input: errors.append('Konselor')
+            if not jenis: errors.append('Jenis Konseling')
+            messages.error(request, f'❌ Field wajib belum diisi: {", ".join(errors)}')
+            logger.debug(f"Booking validation failed: tanggal={tanggal}, waktu={waktu}, konselor={konselor_input}, jenis={jenis}")
             return redirect('booking-konseling')
         
         try:

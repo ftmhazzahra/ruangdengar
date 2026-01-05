@@ -354,20 +354,42 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Konselor</label>
-                    <select name="konselor" class="form-control" required>
+                    <select name="konselor" class="form-control" required id="konselorSelect">
                         <option value="">-- Pilih Konselor --</option>
                         {% if counselors %}
                             {% for c in counselors %}
                                 <option value="{{ c.id }}">{{ c.name }}{% if c.title %} - {{ c.title }}{% endif %}</option>
                             {% endfor %}
+                        {% else %}
+                            <option value="" disabled>Tidak ada konselor tersedia</option>
                         {% endif %}
                     </select>
+                    <div id="konselorDisplay" style="margin-top: 8px; padding: 8px 12px; background: #f0f0f0; border-radius: 6px; font-size: 13px; color: #666; display: none;">
+                        <strong>Konselor yang dipilih:</strong> <span id="konselorNama"></span>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Nama</label>
                     <input type="text" name="nama" class="form-control" value="{{ nama_user }}" readonly style="background:#f5f5f5;cursor:not-allowed;" required>
                 </div>
             </div>
+
+            <script>
+                // Show/hide konselor yang dipilih
+                const konselorSelect = document.getElementById('konselorSelect');
+                const konselorDisplay = document.getElementById('konselorDisplay');
+                const konselorNama = document.getElementById('konselorNama');
+                
+                konselorSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        const selectedText = this.options[this.selectedIndex].text;
+                        konselorNama.textContent = selectedText;
+                        konselorDisplay.style.display = 'block';
+                    } else {
+                        konselorDisplay.style.display = 'none';
+                    }
+                });
+            </script>
 
             <div class="form-group">
                 <label class="form-label">Topik Konseling</label>
@@ -390,9 +412,50 @@
 
             <div class="form-buttons">
                 <button type="button" class="btn btn-cancel" onclick="window.history.back()">Batal</button>
-                <button type="submit" class="btn btn-primary">Konfirmasi Booking</button>
+                <button type="submit" class="btn btn-primary" id="submitBookingBtn">Konfirmasi Booking</button>
             </div>
         </form>
+
+        <script>
+            // Validate form sebelum submit
+            document.querySelector('form[method="POST"]').addEventListener('submit', function(e) {
+                const konselor = document.querySelector('select[name="konselor"]').value;
+                const tanggal = document.querySelector('input[name="tanggal"]').value;
+                const waktu = document.querySelector('input[name="waktu"]').value;
+                const jenis = document.querySelector('select[name="jenis"]').value;
+                
+                console.log('Form submission debug:', {
+                    konselor: konselor,
+                    tanggal: tanggal,
+                    waktu: waktu,
+                    jenis: jenis
+                });
+                
+                if (!konselor) {
+                    e.preventDefault();
+                    alert('❌ Silakan pilih Konselor terlebih dahulu!');
+                    return false;
+                }
+                
+                if (!tanggal) {
+                    e.preventDefault();
+                    alert('❌ Silakan pilih Tanggal terlebih dahulu!');
+                    return false;
+                }
+                
+                if (!waktu) {
+                    e.preventDefault();
+                    alert('❌ Silakan pilih Waktu terlebih dahulu!');
+                    return false;
+                }
+                
+                if (!jenis) {
+                    e.preventDefault();
+                    alert('❌ Silakan pilih Jenis Konseling terlebih dahulu!');
+                    return false;
+                }
+            });
+        </script>
     </div>
 
     <!-- Schedule Table -->
