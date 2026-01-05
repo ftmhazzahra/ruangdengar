@@ -355,12 +355,11 @@
                 <div class="form-group">
                     <label class="form-label">Konselor</label>
                     <select name="konselor" class="form-control" required>
+                        <option value="">-- Pilih Konselor --</option>
                         {% if counselors %}
                             {% for c in counselors %}
                                 <option value="{{ c.id }}">{{ c.name }}{% if c.title %} - {{ c.title }}{% endif %}</option>
                             {% endfor %}
-                        {% else %}
-                            <option value="">Hasri Wulan Nugraheni, S.Psi</option>
                         {% endif %}
                     </select>
                 </div>
