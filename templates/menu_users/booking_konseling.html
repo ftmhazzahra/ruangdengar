@@ -355,7 +355,7 @@
                 <div class="form-group">
                     <label class="form-label">Konselor</label>
                     <select name="konselor" class="form-control" required id="konselorSelect">
-                        <option value="">-- Pilih Konselor --</option>
+                        <option value="" disabled selected>-- Pilih Konselor --</option>
                         {% if counselors %}
                             {% for c in counselors %}
                                 <option value="{{ c.id }}">{{ c.name }}{% if c.title %} - {{ c.title }}{% endif %}</option>
